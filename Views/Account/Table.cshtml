@@ -1,0 +1,77 @@
+﻿@model List<User>
+
+<div class="text-center">
+    <h2>User Table</h2>
+</div>
+
+
+<div class="btn-group" role="group" aria-label="Button group">
+    <form method="post" asp-action="BlockUser" class="d-inline-block">
+        <button type="submit" class="btn btn-secondary mx-2" id="blockButton">Block</button>
+        <input type="hidden" id="blockUserId" name="userId" value="" />
+    </form>
+
+    <form method="post" asp-action="UnblockUser" class="d-inline-block">
+        <button type="submit" class="btn btn-secondary mx-2" id="unblockButton">Unblock</button>
+        <input type="hidden" id="unblockUserId" name="userId" value="" />
+    </form>
+
+    <form method="post" asp-action="DeleteUser" class="d-inline-block">
+        <button type="submit" class="btn btn-danger mx-2" id="deleteButton">Delete</button>
+        <input type="hidden" id="deleteUserId" name="userId" value="" />
+    </form>
+</div>
+
+
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th><input type="checkbox" id="selectAll">ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Registration Date</th>
+            <th>Last Log In</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td><input type="checkbox" class="user-checkbox" data-id="@user.Id"></td>
+                <td>@user.Name</td>
+                <td>@user.Email</td>
+                <td>@user.RegistrationDate</td>
+                <td>@user.LastLogin</td>
+                <td>@user.Status</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#blockButton').click(function () {
+                var userId = $('.user-checkbox:checked').data('id');
+                $('#blockUserId').val(userId);
+            });
+
+            $('#unblockButton').click(function () {
+                var userId = $('.user-checkbox:checked').data('id');
+                $('#unblockUserId').val(userId);
+            });
+
+            $('#deleteButton').click(function () {
+                var userId = $('.user-checkbox:checked').data('id');
+                $('#deleteUserId').val(userId);
+            });
+
+            $('#selectAll').click(function () {
+                $('.user-checkbox').prop('checked', this.checked);
+            });
+        });
+    </script>
+}
