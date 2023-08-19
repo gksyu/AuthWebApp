@@ -92,18 +92,14 @@ namespace AuthWebApp.Controllers
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login", "Account");
         }
+
         [HttpPost]
-        public IActionResult BlockUser(string userIds)
+        public async Task<IActionResult> BlockUser(string userIds)
         {
             string[] userIdArray = userIds.Split('|');
             List<int> userIntIds = userIdArray.Select(int.Parse).ToList();
 
-            var currentUser = db.Users.FirstOrDefault(u => u.Name == User.Identity.Name);
-            if (currentUser != null && currentUser.Status == "Blocked")
-            {
-                HttpContext.SignOutAsync();
-                return RedirectToAction("Login", "Account");
-            }
+            bool currentUserBlocked = false;
 
             foreach (int userId in userIntIds)
             {
@@ -112,7 +108,17 @@ namespace AuthWebApp.Controllers
                 {
                     user.Status = "Blocked";
                     db.SaveChanges();
+
+                    if (!currentUserBlocked && User.Identity.Name == user.Email)
+                    {
+                        currentUserBlocked = true;
+                    }
                 }
+            }
+            if (currentUserBlocked)
+            {
+                await Logout();
+                return RedirectToAction("Login", "Account");
             }
             return RedirectToAction("Table", "Account");
         }
@@ -137,9 +143,9 @@ namespace AuthWebApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult DeleteUser(string userIds)
+        public async Task<IActionResult> DeleteUser(string userIds)
         {
-            string[] userIdArray = userIds.Split('|'); 
+            string[] userIdArray = userIds.Split('|');
             List<int> userIntIds = userIdArray.Select(int.Parse).ToList();
 
             foreach (int userId in userIntIds)
@@ -147,9 +153,9 @@ namespace AuthWebApp.Controllers
                 var user = db.Users.Find(userId);
                 if (user != null)
                 {
-                    if (User.Identity.IsAuthenticated && User.Identity.Name == user.Name)
+                    if (User.Identity.IsAuthenticated && User.Identity.Name == user.Email)
                     {
-                        HttpContext.SignOutAsync();
+                        await Logout(); 
                         return RedirectToAction("Register", "Account");
                     }
                     db.Users.Remove(user);
