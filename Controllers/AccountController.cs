@@ -95,8 +95,15 @@ namespace AuthWebApp.Controllers
         [HttpPost]
         public IActionResult BlockUser(string userIds)
         {
-            string[] userIdArray = userIds.Split('|'); 
+            string[] userIdArray = userIds.Split('|');
             List<int> userIntIds = userIdArray.Select(int.Parse).ToList();
+
+            var currentUser = db.Users.FirstOrDefault(u => u.Name == User.Identity.Name);
+            if (currentUser != null && currentUser.Status == "Blocked")
+            {
+                HttpContext.SignOutAsync();
+                return RedirectToAction("Login", "Account");
+            }
 
             foreach (int userId in userIntIds)
             {
@@ -105,16 +112,11 @@ namespace AuthWebApp.Controllers
                 {
                     user.Status = "Blocked";
                     db.SaveChanges();
-
-                    if (User.Identity.IsAuthenticated && User.Identity.Name == user.Name)
-                    {
-                        HttpContext.SignOutAsync();
-                        return RedirectToAction("Login", "Account");
-                    }
                 }
             }
             return RedirectToAction("Table", "Account");
         }
+
 
         [HttpPost]
         public IActionResult UnblockUser(string userIds)
