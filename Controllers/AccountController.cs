@@ -92,42 +92,69 @@ namespace AuthWebApp.Controllers
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login", "Account");
         }
-
-        public IActionResult BlockUser(int userId)
+        [HttpPost]
+        public IActionResult BlockUser(string userIds)
         {
-            var user = db.Users.Find(userId);
-            if (user != null)
+            string[] userIdArray = userIds.Split('|'); 
+            List<int> userIntIds = userIdArray.Select(int.Parse).ToList();
+
+            foreach (int userId in userIntIds)
             {
-                user.Status = "Blocked";
-                db.SaveChanges();
+                var user = db.Users.Find(userId);
+                if (user != null)
+                {
+                    user.Status = "Blocked";
+                    db.SaveChanges();
+
+                    if (User.Identity.IsAuthenticated && User.Identity.Name == user.Name)
+                    {
+                        HttpContext.SignOutAsync();
+                        return RedirectToAction("Login", "Account");
+                    }
+                }
             }
-            HttpContext.SignOutAsync();
-            return RedirectToAction("Login", "Account");
+            return RedirectToAction("Table", "Account");
         }
 
         [HttpPost]
-        public IActionResult UnblockUser(int userId)
+        public IActionResult UnblockUser(string userIds)
         {
-            var user = db.Users.Find(userId);
-            if (user != null)
+            string[] userIdArray = userIds.Split('|'); 
+            List<int> userIntIds = userIdArray.Select(int.Parse).ToList();
+
+            foreach (int userId in userIntIds)
             {
-                user.Status = "Active";
-                db.SaveChanges();
+                var user = db.Users.Find(userId);
+                if (user != null)
+                {
+                    user.Status = "Active";
+                    db.SaveChanges();
+                }
             }
-            return RedirectToAction("Login", "Account");
+            return RedirectToAction("Table", "Account");
         }
 
         [HttpPost]
-        public IActionResult DeleteUser(int userId)
+        public IActionResult DeleteUser(string userIds)
         {
-            var user = db.Users.Find(userId);
-            if (user != null)
+            string[] userIdArray = userIds.Split('|'); 
+            List<int> userIntIds = userIdArray.Select(int.Parse).ToList();
+
+            foreach (int userId in userIntIds)
             {
-                db.Users.Remove(user);
-                db.SaveChanges();
+                var user = db.Users.Find(userId);
+                if (user != null)
+                {
+                    if (User.Identity.IsAuthenticated && User.Identity.Name == user.Name)
+                    {
+                        HttpContext.SignOutAsync();
+                        return RedirectToAction("Register", "Account");
+                    }
+                    db.Users.Remove(user);
+                    db.SaveChanges();
+                }
             }
-            HttpContext.SignOutAsync();
-            return RedirectToAction("Login", "Account");
+            return RedirectToAction("Table", "Account");
         }
     }
 }
